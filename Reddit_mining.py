@@ -24,22 +24,29 @@ c = conn.cursor()
 
 # Create the table submission
 c.execute("CREATE TABLE IF NOT EXISTS submission (Title text, Submission_id integer, User integer, Timestamp datetime, Body text)")
+conn.commit() 
+
+#Find the oldest submission here
+c.execute("select min(Timestamp) from submission")
+earliest = c.fetchone()[0]
+print(earliest)
 
 print (my_subreddit);
-all_submissions = reddit.subreddit(my_subreddit).submissions()
+all_submissions = reddit.subreddit(my_subreddit).submissions(None, earliest)
       
 for submission in all_submissions:
-    # Insert a row of data
-    #print(vars(submission.author))
-    c.execute("INSERT INTO submission (Title, Submission_id, User, Timestamp, Body) \
-    VALUES (?,?,?,?,?)", (submission.title,
-                          submission.id,
-                          submission.author.name,
-                          submission.created,
-                          submission.selftext))
+    if ((earliest is None) or (submission.created < earliest)) :  # for some reason, we don't get the earliest.
+        # Insert a row of data
+        #print(vars(submission.author))
+        c.execute("INSERT INTO submission (Title, Submission_id, User, Timestamp, Body) \
+        VALUES (?,?,?,?,?)", (submission.title,
+                              submission.id,
+                              submission.author.name,
+                              submission.created,
+                              submission.selftext))
     
-    conn.commit() 
-    print(str(submission.created) +" -  id: "+ str(submission.id))
+        conn.commit() 
+        print(str(submission.created) +" -  id: "+ str(submission.id))
  
     
     #submission.comments.replace_more(limit=0)
