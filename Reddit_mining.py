@@ -23,7 +23,7 @@ conn = sqlite3.connect('reddit.sqlite')
 c = conn.cursor()
 
 # Create the table submission
-c.execute("CREATE TABLE submission (Title text, Submission_id integer, User integer, Timestamp datetime, Body text)")
+c.execute("CREATE TABLE IF NOT EXISTS submission (Title text, Submission_id integer, User integer, Timestamp datetime, Body text)")
 
 print (my_subreddit);
 all_submissions = reddit.subreddit(my_subreddit).submissions()
