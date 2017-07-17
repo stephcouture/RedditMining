@@ -22,8 +22,9 @@ print(reddit.read_only)  # Output: True
 conn = sqlite3.connect('reddit.sqlite')
 c = conn.cursor()
 
-# Create the table submission
-c.execute("CREATE TABLE IF NOT EXISTS submission (Title text, Submission_id integer, User integer, Timestamp datetime, Body text)")
+# Create the table submission and comments, if they do not exists
+c.execute("CREATE TABLE IF NOT EXISTS submission (Title text, Submission_id string, User string, Timestamp integer, Body text)")
+c.execute("CREATE TABLE IF NOT EXISTS comment (submission_id integer, Comment_id string, Parent_id string, Timestamp integer, User string, Body text)")
 conn.commit() 
 
 #Find the oldest submission here
@@ -33,6 +34,7 @@ print(earliest)
 
 print (my_subreddit);
 all_submissions = reddit.subreddit(my_subreddit).submissions(None, earliest)
+#all_submissions = reddit.subreddit(my_subreddit).submissions()
       
 for submission in all_submissions:
     if ((earliest is None) or (submission.created < earliest)) :  # for some reason, we don't get the earliest.
@@ -48,11 +50,21 @@ for submission in all_submissions:
         conn.commit() 
         print(str(submission.created) +" -  id: "+ str(submission.id))
  
-    
-    #submission.comments.replace_more(limit=0)
-    #for comment in submission.comments.list():
-        # print(vars(comment))  
+        submission.comments.replace_more(limit=0)
+        for comment in submission.comments.list():
+            # print(vars(comment))  // to test
+            # For JSON Reddit, see : https://github.com/reddit/reddit/wiki/JSON
+                    
+            c.execute("INSERT INTO comment (submission_id, Comment_id, Parent_id, Timestamp, User, Body) \
+                VALUES (?,?,?,?,?, ?)", (submission.id,
+                                      comment.id,
+                                      comment.parent_id,
+                                      comment.created,
+                                      "None" if comment.author is None else comment.author.name,
+                                      comment.body))
+            
+            
 
-
+print("Fin du script")
 
 conn.close()
